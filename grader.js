@@ -63,16 +63,23 @@ var clone = function(fn) {
     return fn.bind({});
 };
 
-var downloadHtmlFile = function(url) {
+var downloadHtmlFile = function(url,successFunction) {
   rest.get(url).on('complete', function(result) {
     if (result instanceof Error) {
-      console.error('Error: ' + result.message);
+      console.error('Error retrieving resource: ' + result.message);
     } else {
       fs.writeFileSync('htmlFile',result);
-      return 'htmlFile';
+      successFunction('htmlFile');
     }
   });//end get call
+  //wait until error or 
 };//end downloadHtmlFile
+
+var processFile = function(file) {
+    var checkJson = checkHtmlFile(file, program.checks);
+    var outJson = JSON.stringify(checkJson, null, 4);
+    console.log(outJson);
+};
 
 if(require.main == module) {
     program
@@ -82,12 +89,10 @@ if(require.main == module) {
         .parse(process.argv);
     
     if(program.url){
-	downloadHtmlFile(program.url);
-	program.file='htmlFile';
+	downloadHtmlFile(program.url,processFile);
+    }else{
+	processFile(program.file);
     }
-    var checkJson = checkHtmlFile(program.file, program.checks);
-    var outJson = JSON.stringify(checkJson, null, 4);
-    console.log(outJson);
 } else {
     exports.checkHtmlFile = checkHtmlFile;
 }
